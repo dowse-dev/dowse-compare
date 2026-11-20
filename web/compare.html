@@ -114,6 +114,7 @@
   .lb-table .n { width: 34px; color: var(--faint); font-variant-numeric: tabular-nums; }
   .lb-table tr.top .n { color: var(--jade); font-weight: 700; }
   .lb-name { font-weight: 600; white-space: normal !important; }
+  .lb-table td.lb-empty { white-space: normal; color: var(--muted); padding: 18px 8px; font-size: 14px; }
   .lb-table tr.unranked td { color: var(--muted); }
   .lb-table tr.unranked .lb-avg b { color: var(--muted); }
   .lb-table tr.unranked .lb-bar i { background: var(--faint); }
@@ -961,7 +962,11 @@
   async function loadLeaderboard() {
     try {
       const lb = await (await fetch('/api/compare/leaderboard')).json();
-      if (!lb.rows || !lb.rows.length) { $('lb').hidden = true; return; }
+      if (!lb.rows || !lb.rows.length) {
+        $('lb-sub').textContent = '';
+        const tr = el('tr'); const td = el('td', 'lb-empty', 'No queries yet. Run the first comparison and the table starts here.'); td.colSpan = 6; tr.appendChild(td);
+        $('lb-body').replaceChildren(tr); $('lb').hidden = false; return;
+      }
       $('lb-sub').textContent = `${lb.queries} ${lb.queries === 1 ? 'query' : 'queries'} people ran here, each counted once`;
       const body = $('lb-body'); body.replaceChildren();
       let rank = 0;
