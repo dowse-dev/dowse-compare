@@ -46,9 +46,11 @@ const (
 //   - Perplexity Context API: $1/1k URLs; it reports the cost.
 //   - Context.dev scrape: 1 credit, $20/10,000 on the Developer plan.
 const (
-	priceDowseExtract      = 2 * 10.0 / 13000
-	priceExaContents       = 0.001
-	priceTavilyExtractPage = 0.008 / 5
+	priceDowseExtract = 2 * 10.0 / 13000
+	priceExaContents  = 0.001
+	// Tavily bills 1 credit ($0.008) per started group of 5 successful pages,
+	// so one page read alone costs a whole credit.
+	priceTavilyExtractPage = 0.008
 	pricePerplexityContext = 0.001
 )
 

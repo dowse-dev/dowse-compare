@@ -370,6 +370,7 @@
   }
   thead th .mode { color: var(--faint); font-weight: 400; font-size: 12px; margin-top: 1px; }
   thead th .price { color: var(--muted); font-weight: 500; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .batch { display: block; font-size: 11.5px; font-weight: 600; color: var(--good); font-variant-numeric: tabular-nums; }
   .score .price { color: var(--muted); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: 1px; }
   thead th .t { color: var(--faint); font-weight: 400; font-size: 12px; font-variant-numeric: tabular-nums; margin-left: 6px; }
   th.rk, td.rk { width: 44px; color: var(--faint); font-size: 12px; text-align: center; font-variant-numeric: tabular-nums; padding: 14px 0; }
@@ -586,7 +587,7 @@
     <div>
       <h2>Badges and prices</h2>
       <p>An API passes when it got the page and the text is its real content. Passing does not mean complete: compare the lengths. Times are measured from our server in the US.</p>
-      <p>Prices are list prices for one page at the entry paid tier: Dowse at the $10 pack, Exa and Perplexity as they report them, Tavily pay as you go, Context.dev on its $20 Developer plan. A page compared again within 6 hours shows the earlier run.</p>
+      <p>Prices are list prices for one page read alone, at the entry paid tier: Dowse at the $10 pack, Exa, Perplexity and Parallel as they report them, Tavily pay as you go, Context.dev on its $20 Developer plan, Keenable as it reports it. Dowse and Tavily bill per started group of 5 pages (Dowse 2 credits, Tavily 1 credit), so reading 5 pages in one call costs a fifth per page; that price is shown under theirs. The others charge the same per page however they are called. A page compared again within 6 hours shows the earlier run.</p>
     </div>
   </section>
   </main>
@@ -1017,6 +1018,7 @@
     if (c.status === 'ok') {
       rSet(c.id, 'wait', 'Read it · judging…');
       meta.textContent = `${c.chars.toLocaleString()} chars · ${fmtMs(c.ms)} · ${per1kPages(c.cost_usd || 0) || ''}`;
+      if (XBATCH[c.id]) meta.appendChild(el('span', 'batch', batchNote(c.id)));
       const det = el('details'); det.append(el('summary', null, 'Show the start of the text'), el('pre', null, c.preview));
       row.appendChild(det);
     } else {
@@ -1092,15 +1094,26 @@
 
   // ---------- Extract ----------
   const XPROVIDERS = [
-    { id: 'dowse', name: 'Dowse', mode: 'basic extract', price: 2 * 10 / 13000 },
+    { id: 'dowse', name: 'Dowse', mode: 'basic extract', price: 2 * 10 / 13000, batch: 2 * 10 / 13000 / 5 },
     { id: 'exa', name: 'Exa', mode: 'contents, live', price: 0.001 },
-    { id: 'tavily', name: 'Tavily', mode: 'basic extract', price: 0.008 / 5 },
+    { id: 'tavily', name: 'Tavily', mode: 'basic extract', price: 0.008, batch: 0.008 / 5 },
     { id: 'perplexity', name: 'Perplexity', mode: 'Context API, live', price: 0.001 },
     { id: 'contextdev', name: 'Context.dev', mode: 'scrape, live', price: 0.002 },
     { id: 'parallel', name: 'Parallel', mode: 'extract, full page', price: 0.001 },
     { id: 'keenable', name: 'Keenable', mode: 'fetch, live', price: 0.004 },
   ];
   const XPRICE = Object.fromEntries(XPROVIDERS.map(p => [p.id, p.price]));
+  // Dowse and Tavily bill per started group of 5 pages (2 credits and 1 credit),
+  // so reading 5 pages in one call costs a fifth per page.
+  const XBATCH = Object.fromEntries(XPROVIDERS.filter(p => p.batch).map(p => [p.id, p.batch]));
+  const batchNote = id => XBATCH[id] ? '$' + (XBATCH[id] * 1000).toFixed(2) + ' when 5 per call' : '';
+  // A price line, with the batch price under it where there is one.
+  function priceNode(id, usd) {
+    const f = document.createDocumentFragment();
+    f.append(per1kPages(usd));
+    if (XBATCH[id]) f.appendChild(el('span', 'batch', batchNote(id)));
+    return f;
+  }
   const XEXAMPLES = [
     'https://stripe.com/pricing',
     'https://news.ycombinator.com/',
@@ -1156,17 +1169,18 @@
       head.appendChild(th);
       const card = el('div', 'score'); card.id = 'xs-' + p.id;
       const name = el('div', 'name'); name.append(el('span', null, p.name));
-      card.append(name, el('div', 'verdict', '–'), el('div', 'meta', idle ? (p.mode || '') : 'Fetching…'), el('div', 'price', per1kPages(XPRICE[p.id])), el('div', 'badges'));
+      card.append(name, el('div', 'verdict', '–'), el('div', 'meta', idle ? (p.mode || '') : 'Fetching…'), el('div', 'price'), el('div', 'badges'));
+      card.querySelector('.price').appendChild(priceNode(p.id, XPRICE[p.id]));
       board.appendChild(card);
     }
     const body = $('xbody'); body.replaceChildren();
     for (const [key, label] of XROWS) {
-      if (key === 'answers' && !xquestion && !idle) continue;
+      if (key === 'answers' && !xquestion) continue;
       const tr = el('tr'); tr.id = 'xr-' + key;
       tr.appendChild(el('td', 'lab', key === 'answers' && xquestion ? `Answers: “${xquestion}”` : label));
       for (const p of list) {
         const td = el('td', 'cell'); td.id = `x-${p.id}-${key}`;
-        if (key === 'price') td.appendChild(el('span', 'dim', per1kPages(XPRICE[p.id])));
+        if (key === 'price') { const sp = el('span', 'dim'); sp.appendChild(priceNode(p.id, XPRICE[p.id])); td.appendChild(sp); }
         else td.appendChild(idle ? el('span', 'dim', '–') : (key === 'got' ? el('div', 'skel w2') : el('span', 'dim', '…')));
         tr.appendChild(td);
       }
@@ -1186,7 +1200,7 @@
     const ok = c.status === 'ok';
     if (card) {
       card.querySelector('.meta').textContent = ok ? `${c.chars.toLocaleString()} chars · ${fmtMs(c.ms)}` : (c.status === 'unavailable' ? 'Not connected' : (c.reason || 'No answer'));
-      if (c.cost_usd > 0) card.querySelector('.price').textContent = per1kPages(c.cost_usd);
+      if (c.cost_usd > 0) card.querySelector('.price').replaceChildren(priceNode(c.id, c.cost_usd));
       if (!ok) { const v = card.querySelector('.verdict'); v.textContent = c.status === 'unavailable' ? '–' : c.status === 'limit' ? 'No quota' : 'Failed'; v.className = 'verdict' + (c.status === 'unavailable' ? '' : c.status === 'limit' ? ' mid' : ' fail'); }
     }
     if (ok) {
@@ -1195,7 +1209,7 @@
       xset(c.id, 'answers', el('span', 'dim', 'Judging…'));
       xset(c.id, 'chars', document.createTextNode(c.chars.toLocaleString() + ' chars'));
       xset(c.id, 'ms', document.createTextNode(fmtMs(c.ms)));
-      if (c.cost_usd > 0) xset(c.id, 'price', document.createTextNode(per1kPages(c.cost_usd)));
+      if (c.cost_usd > 0) xset(c.id, 'price', priceNode(c.id, c.cost_usd));
       const det = el('details'); det.append(el('summary', null, 'Show the start'), el('pre', null, c.preview));
       xset(c.id, 'preview', det);
     } else {
