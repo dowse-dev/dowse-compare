@@ -1,0 +1,8 @@
+# Keys and local data never go in the repo.
+.env
+.env.*
+!.env.example
+data/
+*.db
+*.db-*
+/dowse-compare

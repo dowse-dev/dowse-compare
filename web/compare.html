@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search API comparison: Dowse, Exa, Tavily, Perplexity, Context.dev, Parallel, Keenable</title>
+<meta name="description" content="Type one query and see Dowse, Exa, Tavily, Perplexity, Context.dev, Parallel and Keenable search results side by side, scored blind by an AI judge.">
+<link rel="icon" href="https://dowse.dev/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hedvig+Letters+Serif:opsz@12..24&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f1f5f2;
+    --fg: #0f2429;
+    --card: #ffffff;
+    --panel: #e8edea;
+    --muted: #425a5c;
+    --faint: #6b8183;
+    --border: #d6dedb;
+    --input: #c4cfcc;
+    --jade: #0a5c6b;
+    --jade-soft: #dcebe9;
+    --deep: #0c3a44;
+    --good: #0a7a5a;
+    --good-soft: #dbefe6;
+    --mid: #a26a06;
+    --mid-soft: #f6ead2;
+    --bad: #8a9a9b;
+    --bad-soft: #eef1f0;
+    --danger: #c4321f;
+    --serif: "Hedvig Letters Serif", Georgia, serif;
+    --sans: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a171b;
+      --fg: #e6efed;
+      --card: #0f2025;
+      --panel: #14292f;
+      --muted: #93aaab;
+      --faint: #6f8889;
+      --border: #1d353b;
+      --input: #2a464d;
+      --jade: #6cc7d6;
+      --jade-soft: rgba(108, 199, 214, 0.12);
+      --deep: #6cc7d6;
+      --good: #5fd0a4;
+      --good-soft: rgba(95, 208, 164, 0.12);
+      --mid: #e2b24f;
+      --mid-soft: rgba(226, 178, 79, 0.12);
+      --bad: #6f8889;
+      --bad-soft: rgba(111, 136, 137, 0.1);
+      --danger: #f0857d;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1680px; margin: 0 auto; padding: 0 24px; }
+  .shell { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
+  main { min-width: 0; }
+
+  .side {
+    position: sticky; top: 16px; margin-top: 40px;
+    max-height: calc(100vh - 32px); display: flex; flex-direction: column;
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  }
+  .side h3 { margin: 0; padding: 16px 16px 2px; font-size: 15px; font-weight: 600; }
+  .side .sub { margin: 0; padding: 0 16px 12px; color: var(--faint); font-size: 12.5px; border-bottom: 1px solid var(--border); }
+  .side ol { list-style: none; margin: 0; padding: 6px; overflow-y: auto; overscroll-behavior: contain; }
+  .side li.empty { color: var(--faint); font-size: 13px; padding: 10px; }
+  .side button {
+    display: block; width: 100%; text-align: left; font: inherit; color: inherit;
+    background: transparent; border: 0; border-radius: 10px; padding: 9px 10px; cursor: pointer;
+    transition: background-color .12s ease;
+  }
+  .side button:hover { background: var(--panel); }
+  .side button.active { background: var(--jade-soft); }
+  .side .hq {
+    font-size: 13.5px; font-weight: 500; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+  }
+  .side .hm { margin-top: 2px; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .side .hm b { color: var(--jade); font-weight: 600; }
+  .tabs { display: inline-flex; gap: 4px; padding: 4px; margin-top: 40px; background: var(--panel); border-radius: 12px; }
+  .tabs button {
+    font: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
+    background: transparent; border: 0; border-radius: 9px; padding: 7px 16px; cursor: pointer;
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .tabs button[aria-selected="true"] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+  .tabs:not([hidden]) + .hero { padding-top: 24px; }
+  .xask { display: grid; grid-template-columns: minmax(0, 1fr) auto; max-width: 780px; }
+  .xask button { padding: 0 22px; }
+  .tag { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); margin-right: 6px; }
+  .side .hqq { font-size: 12.5px; color: var(--muted); margin-top: 1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .xtable { min-width: 980px; }
+  .xtable th.lab, .xtable td.lab { width: 150px; padding: 12px 14px; color: var(--muted); font-size: 13px; font-weight: 500; text-align: left; vertical-align: top; }
+  .xtable td.cell { font-size: 13.5px; }
+  .yes { color: var(--good); font-weight: 600; }
+  .no { color: var(--danger); font-weight: 600; }
+  .dim { color: var(--faint); }
+  .why { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; margin-top: 2px; }
+  .xtable details summary { cursor: pointer; color: var(--jade); font-size: 13px; font-weight: 500; }
+  .xtable pre {
+    margin: 8px 0 0; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: var(--muted);
+    background: var(--panel); border-radius: 8px; padding: 10px;
+  }
+  .score .verdict { font-family: var(--serif); font-size: 30px; line-height: 1.1; margin: 8px 0 4px; letter-spacing: -0.01em; }
+  .score .verdict.pass { color: var(--good); }
+  .score .verdict.fail { color: var(--danger); }
+  .score .verdict.mid { color: var(--mid); }
+  .score .badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scoring {
+    margin: 30px 0 0; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 4px 18px;
+  }
+  .scoring summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 10px 0; color: var(--fg); }
+  .scoring summary::marker { color: var(--jade); }
+  .scoring ol {
+    margin: 0 0 14px; padding-left: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px 28px;
+    color: var(--muted); font-size: 13px; line-height: 1.5;
+  }
+  .scoring li::marker { color: var(--jade); font-weight: 600; }
+  .scoring b { color: var(--fg); font-weight: 600; }
+  .scoring .g1 { color: var(--good); font-weight: 600; }
+  .scoring .g2 { color: var(--mid); font-weight: 600; }
+  .scoring .g3 { color: var(--faint); font-weight: 600; }
+  .scoring + .board { margin-top: 16px; }
+  .scoring code { font-family: var(--mono); font-size: 11.5px; background: var(--panel); color: var(--fg); padding: 2px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+  .dl { margin: 6px 2px 0; font-size: 13px; color: var(--faint); }
+  .dl a { color: var(--jade); font-weight: 500; }
+  @media (max-width: 1400px) { .scoring ol { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 1000px) { .scoring ol { grid-template-columns: 1fr; } }
+  .readhint {
+    position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px;
+    margin: 4px 0 12px; padding: 11px 16px; border-radius: 12px;
+    background: linear-gradient(100deg, color-mix(in srgb, var(--jade) 16%, var(--card)) 0%, var(--jade-soft) 45%, var(--card) 100%);
+    border: 1px solid color-mix(in srgb, var(--jade) 60%, var(--border));
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--jade) 8%, transparent), 0 6px 18px -10px color-mix(in srgb, var(--jade) 60%, transparent);
+    font-size: 15px; color: var(--fg);
+    animation: rh-in .45s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .readhint b { color: var(--jade); font-weight: 700; }
+  .readhint::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%);
+    transform: translateX(-100%); animation: rh-shine 2.4s ease-in-out .5s 2;
+  }
+  @media (prefers-color-scheme: dark) { .readhint::after { background: linear-gradient(100deg, transparent 30%, rgba(108, 199, 214, .18) 50%, transparent 70%); } }
+  .rh-icon {
+    display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 50%;
+    color: #fff; background: var(--jade); position: relative;
+  }
+  @media (prefers-color-scheme: dark) { .rh-icon { color: #06232a; } }
+  .rh-icon::before {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 2px solid var(--jade); opacity: 0; animation: rh-ring 2s ease-out .4s 3;
+  }
+  .rh-new {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--jade); background: var(--card); border: 1px solid color-mix(in srgb, var(--jade) 45%, var(--border));
+    padding: 2px 7px; border-radius: 999px; flex: none;
+  }
+  .rh-text { flex: 1; min-width: 0; }
+  .rh-arrow { color: var(--jade); font-weight: 700; animation: rh-bob 1.6s ease-in-out infinite; }
+  @keyframes rh-in { from { opacity: 0; transform: translateY(6px) scale(.99); } to { opacity: 1; transform: none; } }
+  @keyframes rh-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+  @keyframes rh-ring { 0% { opacity: .7; transform: scale(.85); } 100% { opacity: 0; transform: scale(1.35); } }
+  @keyframes rh-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .readhint, .readhint::after, .rh-icon::before, .rh-arrow { animation: none; }
+  }
+  .readchip {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; margin-left: 6px;
+    font: inherit; font-size: 11.5px; font-weight: 600; color: var(--jade); cursor: pointer;
+    background: var(--jade-soft); border: 1px solid color-mix(in srgb, var(--jade) 35%, transparent);
+    padding: 1px 8px; border-radius: 999px;
+    opacity: 0; transform: translateY(2px); transition: opacity .15s ease, transform .15s ease;
+  }
+  .res:hover .readchip, .res:focus-within .readchip { opacity: 1; transform: none; }
+  @media (hover: none) { .readchip { opacity: 1; transform: none; } }
+  .res a.title { cursor: pointer; }
+  .res .ext { color: var(--faint); text-decoration: none; margin-left: 4px; font-size: 11px; }
+  .res .ext:hover { color: var(--jade); }
+  .backdrop { position: fixed; inset: 0; background: rgba(10, 23, 27, .35); z-index: 20; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(700px, 100vw); z-index: 21;
+    background: var(--bg); border-left: 1px solid var(--border); box-shadow: -12px 0 40px rgba(0, 0, 0, .12);
+    overflow-y: auto; overscroll-behavior: contain; padding: 22px 24px 32px;
+    animation: slidein .22s cubic-bezier(.2, .8, .2, 1);
+  }
+  @keyframes slidein { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
+  .d-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+  .d-kicker { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--jade); }
+  .drawer h3 { font-family: var(--serif); font-weight: 400; font-size: 24px; line-height: 1.2; margin: 6px 0 4px; overflow-wrap: anywhere; }
+  .d-links { font-size: 13px; color: var(--faint); }
+  .d-links a { color: var(--jade); }
+  .d-close { font: inherit; font-size: 26px; line-height: 1; border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 2px 8px; border-radius: 8px; }
+  .d-close:hover { background: var(--panel); }
+  .d-q { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+  .d-q b { color: var(--fg); }
+  .d-sum { margin: 10px 0 14px; font-size: 14px; min-height: 21px; }
+  .d-rows { display: grid; gap: 8px; }
+  .d-row { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
+  .d-row.pass { border-color: color-mix(in srgb, var(--good) 45%, var(--border)); }
+  .d-top { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.6fr) auto; gap: 10px; align-items: baseline; }
+  .d-name { font-weight: 600; font-size: 14px; }
+  .d-name small { display: block; font-weight: 400; color: var(--faint); font-size: 12px; }
+  .d-out { font-size: 13.5px; font-weight: 600; }
+  .d-out.pass { color: var(--good); } .d-out.mid { color: var(--mid); } .d-out.fail { color: var(--danger); } .d-out.wait { color: var(--faint); font-weight: 400; }
+  .d-out .why { display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; }
+  .d-meta { font-size: 12.5px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .d-row details { margin-top: 6px; }
+  .d-row summary { cursor: pointer; color: var(--jade); font-size: 12.5px; }
+  .d-row pre {
+    margin: 6px 0 0; max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: var(--muted); background: var(--panel); border-radius: 8px; padding: 10px;
+  }
+  .d-badges { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: 1px; }
+  .d-note { margin: 18px 2px 0; font-size: 12.5px; color: var(--faint); }
+  @media (max-width: 560px) {
+    .drawer { padding: 18px 16px 28px; }
+    .d-top { grid-template-columns: 1fr; gap: 2px; }
+    .d-meta { text-align: left; }
+  }
+  .public { margin: 10px 0 0; color: var(--faint); font-size: 12.5px; }
+
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; }
+  .brand b { font-family: var(--serif); font-size: 24px; font-weight: 400; letter-spacing: -0.01em; }
+  .brand span { color: var(--muted); font-size: 14px; }
+  .cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--deep); color: #fff; text-decoration: none;
+    padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 14px;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  @media (prefers-color-scheme: dark) { .cta { color: #06232a; } }
+  .cta:hover { opacity: .92; }
+  .cta:active { transform: scale(.97); }
+
+  .hero { padding: 40px 0 8px; max-width: 780px; }
+  h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(32px, 5vw, 50px); line-height: 1.08; letter-spacing: -0.02em;
+    margin: 0 0 14px; text-wrap: balance;
+  }
+  .lede { color: var(--muted); font-size: 17px; margin: 0; text-wrap: pretty; }
+
+  form.ask { display: flex; gap: 10px; margin: 28px 0 12px; max-width: 780px; }
+  .ask input {
+    flex: 1; min-width: 0;
+    font: inherit; font-size: 17px; color: var(--fg);
+    background: var(--card); border: 1px solid var(--input); border-radius: 12px;
+    padding: 14px 16px; outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .ask input:focus { border-color: var(--jade); box-shadow: 0 0 0 3px var(--jade-soft); }
+  .ask button {
+    font: inherit; font-weight: 600; font-size: 16px;
+    background: var(--jade); color: #fff; border: 0; border-radius: 12px;
+    padding: 0 22px; cursor: pointer;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  @media (prefers-color-scheme: dark) { .ask button { color: #06232a; } }
+  .ask button:active { transform: scale(.97); }
+  .ask button:disabled { opacity: .55; cursor: default; transform: none; }
+
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: 900px; }
+  .examples small { color: var(--faint); margin-right: 2px; }
+  .chip {
+    font: inherit; font-size: 13px; color: var(--muted);
+    background: transparent; border: 1px solid var(--border); border-radius: 999px;
+    padding: 5px 12px; cursor: pointer;
+    transition: border-color .12s ease, color .12s ease;
+  }
+  .chip:hover { border-color: var(--jade); color: var(--fg); }
+
+  .notice {
+    margin: 22px 0 0; padding: 12px 14px; border-radius: 10px;
+    background: var(--mid-soft); color: var(--fg); font-size: 14px; display: none;
+  }
+  .notice.show { display: block; }
+
+  /* Scoreboard */
+  .board {
+    display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); gap: 12px;
+    margin: 34px 0 14px;
+  }
+  .score {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px 12px; position: relative;
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  .score.win { border-color: var(--jade); box-shadow: 0 0 0 1px var(--jade); }
+  .score .name { font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .score .badge {
+    font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--jade); background: var(--jade-soft); padding: 2px 8px; border-radius: 999px;
+  }
+  .score .num {
+    font-family: var(--serif); font-size: 40px; line-height: 1.05; margin: 6px 0 2px;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  }
+  .score .num small { font-family: var(--sans); font-size: 14px; color: var(--faint); margin-left: 2px; }
+  .score .meta { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  thead th .t { white-space: nowrap; }
+  .score .bar { height: 4px; background: var(--panel); border-radius: 4px; margin-top: 10px; overflow: hidden; }
+  .score .bar i { display: block; height: 100%; width: 0; background: var(--jade); border-radius: 4px; transition: width .6s cubic-bezier(.2, .8, .2, 1); }
+
+  /* Results table */
+  .tablewrap {
+    overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--card);
+    -webkit-overflow-scrolling: touch;
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 900px; table-layout: fixed; }
+  th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+  thead th {
+    position: sticky; top: 0; background: var(--card); z-index: 1;
+    padding: 12px 14px; font-weight: 600; font-size: 14px;
+  }
+  thead th .mode { color: var(--faint); font-weight: 400; font-size: 12px; margin-top: 1px; }
+  thead th .price { color: var(--muted); font-weight: 500; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .score .price { color: var(--muted); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: 1px; }
+  thead th .t { color: var(--faint); font-weight: 400; font-size: 12px; font-variant-numeric: tabular-nums; margin-left: 6px; }
+  th.rk, td.rk { width: 44px; color: var(--faint); font-size: 12px; text-align: center; font-variant-numeric: tabular-nums; padding: 14px 0; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.cell { padding: 12px 14px; border-left: 1px solid var(--border); }
+  thead th + th { border-left: 1px solid var(--border); }
+  .res { border-left: 3px solid transparent; padding-left: 9px; margin-left: -12px; transition: border-color .4s ease; }
+  .res a.title {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    font-weight: 600; font-size: 14px; line-height: 1.35; text-decoration: none; color: var(--fg);
+  }
+  .res a.title:hover { color: var(--jade); text-decoration: underline; text-underline-offset: 2px; }
+  .res .dom { font-family: var(--mono); font-size: 11.5px; color: var(--jade); margin: 3px 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .res p {
+    margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .res .g { display: none; margin-top: 6px; font-size: 11.5px; font-weight: 600; padding: 1px 7px; border-radius: 6px; font-variant-numeric: tabular-nums; }
+  .res.graded .g { display: inline-block; }
+  .res.good { border-left-color: var(--good); } .res.good .g { color: var(--good); background: var(--good-soft); }
+  .res.mid { border-left-color: var(--mid); } .res.mid .g { color: var(--mid); background: var(--mid-soft); }
+  .res.bad { border-left-color: var(--bad); } .res.bad .g { color: var(--bad); background: var(--bad-soft); }
+  .status { color: var(--faint); font-size: 13px; }
+  .status.err { color: var(--danger); }
+  .skel { height: 10px; border-radius: 4px; background: var(--panel); margin: 6px 0; animation: pulse 1.4s ease-in-out infinite; }
+  .skel.still { animation: none; opacity: .7; }
+  .skel.w1 { width: 85%; } .skel.w2 { width: 55%; } .skel.w3 { width: 95%; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  .appear { animation: appear .3s ease both; }
+  @keyframes appear { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .skel, .appear { animation: none; }
+    .score .bar i, .res { transition: none; }
+  }
+
+  .judge { color: var(--muted); font-size: 14px; margin: 12px 2px 0; min-height: 21px; }
+  .judge .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--jade); margin-right: 8px; vertical-align: 1px; animation: pulse 1s ease-in-out infinite; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 13px; margin: 0 2px 10px; }
+  .legend span::before { content: ""; display: inline-block; width: 3px; height: 12px; border-radius: 2px; margin-right: 7px; vertical-align: -1px; }
+  .legend .l1::before { background: var(--good); } .legend .l2::before { background: var(--mid); } .legend .l3::before { background: var(--bad); }
+
+  .how { margin: 56px 0 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 1100px; }
+  .how h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .how p, .how li { color: var(--muted); font-size: 14.5px; }
+  .how ul { padding-left: 18px; margin: 0; }
+  .how li { margin-bottom: 6px; }
+  .how code { font-family: var(--mono); font-size: 12.5px; background: var(--panel); padding: 1px 5px; border-radius: 5px; color: var(--fg); }
+  footer { border-top: 1px solid var(--border); padding: 22px 0 40px; color: var(--faint); font-size: 13px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer a { color: var(--muted); }
+
+  #ts-box { position: fixed; inset: 0; display: none; place-items: center; background: rgba(10, 23, 27, .35); z-index: 10; }
+  #ts-box.show { display: grid; }
+  #ts-box > div { background: var(--card); padding: 20px; border-radius: 14px; border: 1px solid var(--border); }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 1300px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .side { order: 2; position: static; max-height: 460px; margin-top: 48px; }
+  }
+  @media (max-width: 900px) {
+    .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .how { grid-template-columns: 1fr; gap: 24px; }
+  }
+  @media (max-width: 760px) {
+    .xask { grid-template-columns: minmax(0, 1fr); }
+    .xask button { padding: 13px; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .brand span { display: none; }
+    .hero { padding-top: 20px; }
+    form.ask { flex-direction: column; }
+    .ask button { padding: 13px; }
+    .score .num { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="https://dowse.dev"><b>Dowse</b><span>API comparison</span></a>
+    <a class="cta" href="https://dowse.dev/signup">Get an API key</a>
+  </header>
+
+  <div class="shell">
+  <aside class="side" aria-labelledby="side-h">
+    <h3 id="side-h">Recent comparisons</h3>
+    <p class="sub" id="side-sub">Every query anyone runs, with its results. Click one to see it.</p>
+    <ol id="hist"><li class="empty">Loading…</li></ol>
+  </aside>
+
+  <main>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="What to compare" hidden>
+    <button type="button" role="tab" id="tab-search" aria-selected="true">Search</button>
+    <button type="button" role="tab" id="tab-extract" aria-selected="false">Extract</button>
+  </nav>
+  <section class="hero">
+    <h1 id="h1">One query, seven search APIs, side by side.</h1>
+    <p class="lede" id="lede">Each column fills in as that API answers. When all are in, an AI judge scores every result without seeing which API returned it.</p>
+  </section>
+
+  <div id="mode-search">
+  <form class="ask" id="ask" autocomplete="off">
+    <input id="q" name="q" type="search" maxlength="300" placeholder="Search anything, e.g. best postgres connection pooler" aria-label="Search query" enterkeyhint="search">
+    <button id="go" type="submit">Compare</button>
+  </form>
+  <div class="examples" id="examples">
+    <small>Try</small>
+  </div>
+  </div>
+
+  <div id="mode-extract" hidden>
+  <form class="ask xask" id="xask" autocomplete="off">
+    <input id="xurl" name="url" type="text" inputmode="url" maxlength="2000" placeholder="Paste a URL, e.g. https://stripe.com/pricing" aria-label="Page URL" spellcheck="false">
+    <button id="xgo" type="submit">Compare</button>
+  </form>
+  <div class="examples" id="xexamples">
+    <small>Try</small>
+  </div>
+  </div>
+
+  <p class="public">Every comparison is public and listed on this page, so don't type anything private.</p>
+  <div class="notice" id="notice" role="status"></div>
+
+  <section id="out">
+    <details class="scoring" id="scoring" open>
+      <summary>How is this scored?</summary>
+      <ol>
+        <li><b>Same query, 10 results each.</b> Every API gets your query at the same time and returns its top 10, with its default settings.</li>
+        <li><b>One blind pool.</b> All results go into one list: copies of the same page are merged, the order is shuffled and the API names are removed.</li>
+        <li><b>An AI judge grades every result 0–100</b> for how well it answers your query: <b>Jev</b>, TypeSafe's System One model on OpenRouter, with a prompt written for judging and published in the code. Dowse also uses Jev, with a different prompt, to rank its own results, which is why the judge never sees which API returned what. Spam and clickbait are marked down, and the judge knows today's date. <span class="g1">Relevant</span> is 60 or more, <span class="g2">partly</span> 30–59, <span class="g3">off-topic</span> under 30.</li>
+        <li><b>Each API's score, 0–100 (nDCG@10):</b> its 10 results in its own order, compared with the best 10 that any API found. Higher positions count more (#1 about 3.5 times as much as #10), and missing a great page another API found costs points. A perfect list scores 100.</li>
+        <li><b>Ties.</b> The judge varies a little between runs, so a lead of less than 2 points is a tie and nobody gets the badge.</li>
+        <li><b>Time and price.</b> Time is measured from our server in the US. Price is each API's published price per query at its entry paid tier.</li>
+        <li><b>Click a result</b> to see whether each API can actually read that page: it fetches the page with every extract API and the judge checks each text against your search.</li>
+        <li><b>Check it yourself.</b> Every run has a JSON file with all results, every grade and the exact request we sent the judge. Send that request to OpenRouter with your own key and compare: <code>jq '.run.judge.request' run.json | curl -s https://openrouter.ai/api/v1/systemone -H "Authorization: Bearer $OPENROUTER_API_KEY" -H 'Content-Type: application/json' -d @-</code></li>
+      </ol>
+    </details>
+    <div class="board" id="board"></div>
+    <div class="legend" id="legend" hidden>
+      <span class="l1">Relevant</span><span class="l2">Partly relevant</span><span class="l3">Off-topic</span>
+    </div>
+    <div class="readhint" id="readhint" hidden>
+      <span class="rh-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="rh-new">New</span>
+      <span class="rh-text"><b>Click any result</b> to see which APIs can actually read that page.</span>
+      <span class="rh-arrow" aria-hidden="true">↓</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr id="head"><th class="rk">#</th></tr></thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+    <p class="judge" id="judge" aria-live="polite"></p>
+    <p class="dl" id="dl" hidden><a id="dl-link" href="#" download>Download this run (JSON)</a> · every result, every grade and the exact judge request</p>
+  </section>
+
+  <section id="xout" hidden>
+    <div class="board" id="xboard"></div>
+    <div class="tablewrap">
+      <table class="xtable">
+        <thead><tr id="xhead"><th class="lab"></th></tr></thead>
+        <tbody id="xbody"></tbody>
+      </table>
+    </div>
+    <p class="judge" id="xjudge" aria-live="polite"></p>
+  </section>
+
+  <section class="how" id="how-search">
+    <div>
+      <h2>How it works</h2>
+      <ul>
+        <li>Your query goes to all seven APIs at the same time through their public APIs, each asked for 10 results with its default settings: Dowse <code>basic</code>, Exa <code>auto</code>, Tavily <code>basic</code>, the Perplexity Search API, Context.dev web search, Parallel (its default, <code>advanced</code>) and Keenable (its default, <code>pro</code>). Dowse also runs its <code>advanced</code> mode, which plans extra searches first and costs twice its basic price. Every API gets only your query; Parallel's docs suggest also writing a goal and 2-3 keyword queries, which no API here is given.</li>
+        <li>Every unique result from all of them goes into one pool. Duplicates are merged, the order is shuffled and the API names are removed.</li>
+        <li>The judge grades each result for how well it answers the query and marks spam or clickbait down.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>The score</h2>
+      <p>Each API gets an nDCG@10 score from 0 to 100: its own top 10, in its own order, compared with the best 10 results any of them found. An API loses points for weak results near the top and for missing strong results that another API found. Times are measured from our server in the US.</p>
+      <p>Prices are each company's published list price for one query with these settings, at its entry paid tier: Dowse at the $10 pack, Exa's own reported cost for the call, Tavily and Perplexity pay as you go, Context.dev on its $20 Developer plan, Parallel and Keenable pay as you go. Bigger plans cost less per query for all of them.</p>
+      <p>The judge varies a little between runs, so a lead of less than 2 points is called a tie. A query run again within a day shows the earlier run. Every run stays in the list on the left, so anyone can check it.</p>
+    </div>
+  </section>
+
+  <section class="how" id="how-extract" hidden>
+    <div>
+      <h2>How it works</h2>
+      <ul>
+        <li>The URL goes to all seven extract APIs at the same time, each told to fetch the page live where it allows: Dowse <code>basic</code> extract, Exa contents, Tavily <code>basic</code> extract, the Perplexity Context API, Context.dev scrape, Parallel Extract and Keenable fetch. Tavily has no setting for a live fetch, so it may answer from a stored copy.</li>
+        <li>An AI judge (Jev) reads every text that came back, numbered in random order and without the API names, and answers yes or no: is this the page's real content, or a login wall, bot check, cookie notice or error page?</li>
+        <li>The page shows the first part of each text only.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Badges and prices</h2>
+      <p>An API passes when it got the page and the text is its real content. Passing does not mean complete: compare the lengths. Times are measured from our server in the US.</p>
+      <p>Prices are list prices for one page at the entry paid tier: Dowse at the $10 pack, Exa and Perplexity as they report them, Tavily pay as you go, Context.dev on its $20 Developer plan. A page compared again within 6 hours shows the earlier run.</p>
+    </div>
+  </section>
+  </main>
+  </div>
+
+  <footer>
+    <span>Dowse is a web search and extraction API for AI agents.</span>
+    <span><a href="https://dowse.dev">dowse.dev</a> · <a href="https://dowse.dev/docs">Docs</a> · <a href="https://dowse.dev/pricing">Pricing</a></span>
+  </footer>
+</div>
+<div id="ts-box"><div class="ts-widget"></div></div>
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="d-title">
+  <div class="d-head">
+    <div>
+      <div class="d-kicker">Can each API read this page?</div>
+      <h3 id="d-title"></h3>
+      <div class="d-links"><span class="dom" id="d-dom"></span> · <a id="d-open" target="_blank" rel="noopener nofollow">Open page ↗</a></div>
+    </div>
+    <button type="button" class="d-close" id="d-close" aria-label="Close">×</button>
+  </div>
+  <p class="d-q" id="d-q"></p>
+  <p class="d-sum" id="d-sum" aria-live="polite"></p>
+  <div class="d-rows" id="d-rows"></div>
+  <p class="d-note">Every API fetches the page itself, live where it allows. An AI judge (Jev) reads each text without the API names and answers yes or no: is this the page's real content, and does it answer your search? Only the start of each text is shown.</p>
+</aside>
+
+<script>
+(() => {
+  const EXAMPLES = [
+    'best postgres connection pooler',
+    'EU AI Act obligations for general purpose AI models',
+    'fix react hydration mismatch error',
+    'rust vs go for cli tools',
+    'how does HNSW vector search work',
+  ];
+  const $ = id => document.getElementById(id);
+  const form = $('ask'), input = $('q'), btn = $('go'), notice = $('notice');
+  let providers = [], columns = {}, current = null, xcurrent = null, extractShown = false;
+  function shortURL(u) { try { const x = new URL(u); return x.hostname.replace(/^www\./, '') + (x.pathname === '/' ? '' : x.pathname); } catch { return u; } }
+
+  const ex = $('examples');
+  for (const q of EXAMPLES) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = q;
+    b.onclick = () => { input.value = q; run(q); };
+    ex.appendChild(b);
+  }
+
+  // Turnstile -> session cookie (same flow as the old search page). No site key means no gate.
+  let tsKey = null, tsWidget = null, tsCur = null, sessionAt = 0;
+  const tsBox = $('ts-box');
+  const tsReady = fetch('/api/config').then(r => r.json()).then(c => {
+    tsKey = c.turnstile_site_key || null;
+    if (!tsKey) return;
+    return new Promise(res => {
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true; s.onload = res; s.onerror = () => { tsKey = 'failed'; res(); };
+      document.head.appendChild(s);
+    });
+  }).catch(() => { tsKey = null; });
+  function settle(err) {
+    const c = tsCur; if (!c) return; tsCur = null; clearTimeout(c.timer);
+    tsBox.classList.remove('show'); err ? c.reject(err) : c.resolve();
+  }
+  function onToken(token) {
+    fetch('/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) })
+      .then(r => { if (!r.ok) throw new Error('The human check failed. Reload and try again.'); sessionAt = Date.now(); settle(); })
+      .catch(settle);
+  }
+  async function ensureSession() {
+    await tsReady;
+    if (!tsKey) return;
+    if (tsKey === 'failed') throw new Error('The human check could not load. Disable blockers for this page and reload.');
+    if (Date.now() - sessionAt < 50 * 60 * 1000) return;
+    await new Promise((resolve, reject) => {
+      tsCur = { resolve, reject, timer: setTimeout(() => settle(new Error('The human check timed out. Try again.')), 20000) };
+      if (tsWidget === null) {
+        tsWidget = turnstile.render(tsBox.querySelector('.ts-widget'), {
+          sitekey: tsKey, execution: 'execute', appearance: 'interaction-only',
+          callback: onToken,
+          'before-interactive-callback': () => { tsBox.classList.add('show'); if (tsCur) clearTimeout(tsCur.timer); },
+          'error-callback': () => settle(new Error('The human check failed. Reload and try again.')),
+          'timeout-callback': () => settle(new Error('The human check timed out. Try again.')),
+          'expired-callback': () => settle(new Error('The human check expired. Try again.')),
+        });
+      } else {
+        turnstile.reset(tsWidget);
+      }
+      turnstile.execute(tsWidget);
+    });
+  }
+  tsReady.then(() => ensureSession()).catch(() => {});
+
+  function showNotice(msg) { notice.textContent = msg; notice.classList.toggle('show', !!msg); }
+  function domain(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } }
+  function safeHref(u) { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } }
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function fmtMs(ms) { return ms >= 1000 ? (ms / 1000).toFixed(1) + ' s' : ms + ' ms'; }
+
+  // The columns shown before any query; the stream's start event sends the same list.
+  const PROVIDERS = [
+    { id: 'dowse', name: 'Dowse', mode: 'basic search', price: 2 * 10 / 13000 },
+    { id: 'dowse-adv', name: 'Dowse advanced', mode: 'advanced search', price: 4 * 10 / 13000 },
+    { id: 'exa', name: 'Exa', mode: 'auto search', price: 0.007 },
+    { id: 'tavily', name: 'Tavily', mode: 'basic search', price: 0.008 },
+    { id: 'perplexity', name: 'Perplexity', mode: 'Search API', price: 0.005 },
+    { id: 'contextdev', name: 'Context.dev', mode: 'web search', price: 0.002 },
+    { id: 'parallel', name: 'Parallel', mode: 'default (advanced)', price: 0.005 },
+    { id: 'keenable', name: 'Keenable', mode: 'default (pro)', price: 0.004 },
+  ];
+  const LIST_PRICE = Object.fromEntries(PROVIDERS.map(p => [p.id, p.price]));
+  // Price of one query, shown per 1,000 queries so the numbers are readable.
+  const per1k = usd => usd > 0 ? '$' + (usd * 1000).toFixed(usd * 1000 < 10 ? 2 : 1) + ' per 1k queries' : '';
+  function setPrice(id, usd) {
+    const text = per1k(usd);
+    const cell = document.querySelector(`#h-${id} .price`); if (cell) cell.textContent = text;
+    const card = document.querySelector(`#s-${id} .price`); if (card) card.textContent = text;
+  }
+
+  // idle: the empty table shown on page load, with still placeholders instead of loading ones.
+  function layout(list, idle) {
+    providers = list; columns = {};
+    $('board').style.setProperty('--cols', list.length > 6 ? Math.ceil(list.length / 2) : list.length);
+    $('board').closest('section').querySelector('table').style.minWidth = Math.max(900, 44 + list.length * (list.length > 6 ? 136 : 175)) + 'px';
+    const head = $('head'); head.replaceChildren(el('th', 'rk', '#'));
+    const board = $('board'); board.replaceChildren();
+    for (const p of list) {
+      const th = el('th'); th.id = 'h-' + p.id;
+      th.append(p.name, el('span', 't'), el('div', 'mode', p.mode || ''), el('div', 'price'));
+      head.appendChild(th);
+      const card = el('div', 'score'); card.id = 's-' + p.id;
+      const name = el('div', 'name'); name.append(el('span', null, p.name));
+      card.append(name, el('div', 'num', '–'), el('div', 'meta', idle ? (p.mode || '') : 'Waiting…'), el('div', 'price'));
+      const bar = el('div', 'bar'); bar.appendChild(el('i')); card.appendChild(bar);
+      board.appendChild(card);
+      setPrice(p.id, LIST_PRICE[p.id]);
+    }
+    const body = $('body'); body.replaceChildren();
+    for (let r = 0; r < 10; r++) {
+      const tr = el('tr'); tr.appendChild(el('td', 'rk', String(r + 1)));
+      for (const p of list) {
+        const td = el('td', 'cell'); td.id = `c-${p.id}-${r}`;
+        if (r < 3) {
+          const k = idle ? 'skel still' : 'skel';
+          td.append(el('div', k + ' w1'), el('div', k + ' w2'), el('div', k + ' w3'));
+        }
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+    $('legend').hidden = true;
+    $('readhint').hidden = true;
+    if (idle) $('judge').textContent = 'Type a query or pick an example, and the table fills in.';
+  }
+  layout(PROVIDERS, true);
+
+  const NAMES = Object.fromEntries(PROVIDERS.map(p => [p.id, p.name]));
+  let currentRunId = 0;
+
+  function ago(iso) {
+    const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return Math.floor(s / 60) + ' min ago';
+    if (s < 86400) return Math.floor(s / 3600) + ' h ago';
+    const d = Math.floor(s / 86400);
+    return d < 30 ? d + (d === 1 ? ' day ago' : ' days ago') : new Date(iso).toLocaleDateString();
+  }
+
+  function setRunURL(id) {
+    const dl = $('dl');
+    if (dl) {
+      dl.hidden = !(id > 0);
+      if (id > 0) { $('dl-link').href = '/api/compare/run?download=1&id=' + id; $('dl-link').setAttribute('download', `dowse-compare-run-${id}.json`); }
+    }
+    const url = new URL(location.href);
+    url.searchParams.delete('q');
+    if (id) url.searchParams.set('run', id); else url.searchParams.delete('run');
+    history.replaceState(null, '', url);
+  }
+
+  function markActive() {
+    for (const b of document.querySelectorAll('#hist button')) b.classList.toggle('active', +b.dataset.id === currentRunId);
+  }
+
+  async function loadHistory() {
+    const list = $('hist');
+    try {
+      const d = await (await fetch('/api/compare/history' + (new URLSearchParams(location.search).get('view') === 'public' ? '?view=public' : ''))).json();
+      list.replaceChildren();
+      if (!d.runs || !d.runs.length) { list.appendChild(el('li', 'empty', 'No comparisons yet. Run the first one.')); return; }
+      for (const r of d.runs) {
+        const b = el('button'); b.type = 'button'; b.dataset.id = r.id;
+        const isX = r.kind === 'extract';
+        const hq = el('div', 'hq');
+        if (extractShown) hq.append(el('span', 'tag', isX ? 'Extract' : 'Search'));
+        hq.append(isX ? shortURL(r.query) : r.query);
+        b.appendChild(hq);
+        if (isX && r.question) b.appendChild(el('div', 'hqq', r.question));
+        const m = el('div', 'hm'); m.append(ago(r.at) + ' · ');
+        if (isX) {
+          m.append(el('b', null, `${(r.passed || []).length} of ${r.total || 0}`), ' passed');
+        } else if (r.winner) {
+          m.append(el('b', null, NAMES[r.winner] || r.winner));
+          if (r.scores && r.scores[r.winner] != null) m.append(' ' + Math.round(r.scores[r.winner]));
+        } else {
+          m.append('tie at the top');
+        }
+        b.appendChild(m);
+        b.onclick = () => openRun(r.id);
+        const li = el('li'); li.appendChild(b); list.appendChild(li);
+      }
+      markActive();
+    } catch {
+      list.replaceChildren(el('li', 'empty', 'Could not load the list.'));
+    }
+  }
+
+  // Shows a stored run: no API calls, nothing counted against any limit.
+  async function openRun(id) {
+    if (current) { current.abort(); current = null; btn.disabled = false; }
+    if (xcurrent) { xcurrent.abort(); xcurrent = null; $('xgo').disabled = false; }
+    showNotice('');
+    try {
+      const res = await fetch('/api/compare/run?id=' + encodeURIComponent(id));
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Comparison not found.');
+      const run = d.run;
+      if (d.kind === 'extract') { setMode('extract'); renderExtractRun(run, d.providers); currentRunId = run.id; setRunURL(run.id); markActive(); return; }
+      setMode('search');
+      input.value = run.query;
+      layout(d.providers.filter(p => run.columns.some(c => c.id === p.id)));
+      for (const c of run.columns) fillColumn(c);
+      if (run.verdict) applyVerdict(run.verdict); else $('judge').textContent = 'The judge did not score this run.';
+      $('judge').prepend(`Run ${ago(run.at)}. `);
+      currentRunId = run.id; setRunURL(run.id); markActive();
+      if (window.matchMedia('(max-width: 1300px)').matches) $('out').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      showNotice(e.message);
+    }
+  }
+  loadHistory();
+
+  const STATUS = { error: 'No answer: the API returned an error.', timeout: 'No answer in time.', unavailable: 'Not connected yet.', limit: 'Out of free quota right now. Try again later.', busy: 'Busy (rate limited). Try again in a minute.' };
+
+  function fillColumn(c) {
+    columns[c.id] = c;
+    if (c.cost_usd > 0) setPrice(c.id, c.cost_usd);
+    const th = $('h-' + c.id); if (th) th.querySelector('.t').textContent = c.status === 'ok' ? fmtMs(c.ms) : '';
+    const card = $('s-' + c.id);
+    if (card) card.querySelector('.meta').textContent = c.status === 'ok' ? `${c.results.length} results · ${fmtMs(c.ms)}` : (c.status === 'unavailable' ? 'Not connected' : c.status === 'limit' ? 'Out of free quota' : c.status === 'busy' ? 'Busy, try again soon' : 'No answer');
+    for (let r = 0; r < 10; r++) {
+      const td = $(`c-${c.id}-${r}`); if (!td) continue;
+      td.replaceChildren();
+      if (c.status !== 'ok') { if (r === 0) td.appendChild(el('div', 'status err', STATUS[c.status] || 'No answer.')); continue; }
+      const it = c.results[r];
+      if (!it) { if (r === c.results.length) td.appendChild(el('div', 'status', c.results.length ? 'No more results.' : 'No results.')); continue; }
+      const box = el('div', 'res appear');
+      const href = safeHref(it.url);
+      const a = el('a', 'title', it.title || it.url);
+      if (href) { a.href = href; a.target = '_blank'; a.rel = 'noopener nofollow'; }
+      a.title = 'See which APIs can read this page';
+      a.addEventListener('click', e => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // a new tab still opens the page
+        e.preventDefault();
+        openReader(it.url, it.title);
+      });
+      const dom = el('div', 'dom', domain(it.url));
+      if (href) { const ext = el('a', 'ext', '↗'); ext.href = href; ext.target = '_blank'; ext.rel = 'noopener nofollow'; ext.title = 'Open the page'; ext.setAttribute('aria-label', 'Open the page'); dom.appendChild(ext); }
+      box.append(a, dom);
+      if (it.snippet) box.appendChild(el('p', null, it.snippet));
+      box.appendChild(el('span', 'g'));
+      const chip = el('button', 'readchip', 'Who can read it? →'); chip.type = 'button';
+      chip.onclick = () => openReader(it.url, it.title);
+      box.appendChild(chip);
+      td.appendChild(box);
+    }
+  }
+
+  function applyVerdict(v) {
+    let best = 0;
+    for (const p of providers) { const s = v.scores[p.id]; if (s && s.score != null) best = Math.max(best, s.score); }
+    for (const p of providers) {
+      const s = v.scores[p.id], card = $('s-' + p.id); if (!card) continue;
+      const num = card.querySelector('.num'), meta = card.querySelector('.meta'), bar = card.querySelector('.bar i');
+      card.classList.toggle('win', v.winner === p.id);
+      const name = card.querySelector('.name');
+      name.querySelector('.badge')?.remove();
+      if (v.winner === p.id) name.appendChild(el('span', 'badge', 'Best'));
+      if (!s || s.score == null) { num.textContent = '–'; bar.style.width = '0'; continue; }
+      num.replaceChildren(document.createTextNode(Math.round(s.score)), el('small', null, '/100'));
+      bar.style.width = s.score + '%';
+      const c = columns[p.id];
+      meta.textContent = `${s.useful} of ${s.grades.length} relevant · ${c ? fmtMs(c.ms) : ''}`;
+      s.grades.forEach((g, r) => {
+        const box = document.querySelector(`#c-${p.id}-${r} .res`); if (!box) return;
+        const cls = g >= 0.6 ? 'good' : g >= 0.3 ? 'mid' : 'bad';
+        box.classList.add('graded', cls);
+        box.querySelector('.g').textContent = (cls === 'good' ? 'Relevant' : cls === 'mid' ? 'Partly' : 'Off-topic') + ' · ' + Math.round(g * 100);
+      });
+    }
+    $('legend').hidden = false;
+    $('readhint').hidden = false;
+    const ranked = providers.filter(p => v.scores[p.id]?.score != null).sort((a, b) => v.scores[b.id].score - v.scores[a.id].score);
+    const tie = ranked.length > 1 && !v.winner ? ' Too close to call at the top.' : '';
+    $('judge').textContent = ranked.length
+      ? `Judged ${v.pool} unique results. ` + ranked.map(p => `${p.name} ${Math.round(v.scores[p.id].score)}`).join(' · ') + '.' + tie
+      : 'Nothing to judge: no API returned results.';
+  }
+
+  // Reads the event stream from fetch, so refusals (429, 503) arrive as normal JSON errors first.
+  async function run(q) {
+    q = q.trim(); if (!q) return;
+    if (current) current.abort();
+    if (xcurrent) { xcurrent.abort(); xcurrent = null; $('xgo').disabled = false; }
+    const ctl = new AbortController(); current = ctl;
+    showNotice(''); btn.disabled = true;
+    currentRunId = 0; markActive();
+    let startedAt = null;
+    try {
+      await ensureSession();
+      let res = await fetch('/api/compare?q=' + encodeURIComponent(q), { signal: ctl.signal });
+      if (res.status === 403) { sessionAt = 0; await ensureSession(); res = await fetch('/api/compare?q=' + encodeURIComponent(q), { signal: ctl.signal }); }
+      if (!res.ok || !(res.headers.get('content-type') || '').includes('text/event-stream')) {
+        let msg = 'Something went wrong. Try again.';
+        try { msg = (await res.json()).error || msg; } catch {}
+        throw new Error(msg);
+      }
+      const reader = res.body.getReader(), dec = new TextDecoder();
+      let buf = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf('\n\n')) >= 0) {
+          const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+          let ev = 'message', data = '';
+          for (const line of chunk.split('\n')) {
+            if (line.startsWith('event: ')) ev = line.slice(7);
+            else if (line.startsWith('data: ')) data += line.slice(6);
+          }
+          const d = data ? JSON.parse(data) : {};
+          if (ev === 'start') {
+            startedAt = d.cached ? d.at : null;
+            layout(d.providers);
+            $('judge').replaceChildren(el('span', 'dot'), document.createTextNode(d.cached ? 'Showing an earlier run of this query from today.' : 'Waiting for every API to answer…'));
+          } else if (ev === 'column') {
+            fillColumn(d);
+            const left = providers.length - Object.keys(columns).length;
+            if (left === 0) $('judge').replaceChildren(el('span', 'dot'), document.createTextNode('All in. The judge is scoring every result…'));
+          } else if (ev === 'verdict') {
+            applyVerdict(d);
+            if (startedAt) $('judge').prepend(`Run ${ago(startedAt)}. `);
+          } else if (ev === 'done') {
+            if (d.id) { currentRunId = d.id; setRunURL(d.id); }
+            loadHistory();
+          } else if (ev === 'verdict_error') {
+            $('judge').textContent = d.error;
+          }
+        }
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') showNotice(e.message);
+    } finally {
+      if (current === ctl) { current = null; btn.disabled = false; }
+    }
+  }
+
+  // ---------- Reading a clicked result with every extract API ----------
+  let rcurrent = null, rrows = {}, rprov = [], rquery = '';
+  function closeReader() {
+    if (rcurrent) { rcurrent.abort(); rcurrent = null; }
+    { const url = new URL(location.href); url.searchParams.delete('read'); history.replaceState(null, '', url); }
+    $('drawer').hidden = true; $('backdrop').hidden = true; document.body.style.overflow = '';
+  }
+  $('d-close').onclick = closeReader;
+  $('backdrop').onclick = closeReader;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('drawer').hidden) closeReader(); });
+
+  function rRow(p) {
+    const row = el('div', 'd-row'); row.id = 'dr-' + p.id;
+    const top = el('div', 'd-top');
+    const name = el('div', 'd-name', p.name); name.appendChild(el('small', null, p.mode || ''));
+    top.append(name, el('div', 'd-out wait', 'Reading…'), el('div', 'd-meta'));
+    row.appendChild(top);
+    return row;
+  }
+  function rSet(id, cls, text, why) {
+    const out = document.querySelector(`#dr-${id} .d-out`); if (!out) return;
+    out.className = 'd-out ' + cls; out.textContent = text;
+    if (why) out.appendChild(el('span', 'why', why));
+  }
+  function rColumn(c) {
+    rrows[c.id] = c;
+    const row = $('dr-' + c.id); if (!row) return;
+    const meta = row.querySelector('.d-meta');
+    if (c.status === 'ok') {
+      rSet(c.id, 'wait', 'Read it · judging…');
+      meta.textContent = `${c.chars.toLocaleString()} chars · ${fmtMs(c.ms)} · ${per1kPages(c.cost_usd || 0) || ''}`;
+      const det = el('details'); det.append(el('summary', null, 'Show the start of the text'), el('pre', null, c.preview));
+      row.appendChild(det);
+    } else {
+      const label = { unavailable: 'Not connected', limit: 'Out of free quota', busy: 'Busy, try again soon', timeout: 'Failed' }[c.status] || 'Failed';
+      rSet(c.id, c.status === 'unavailable' ? 'wait' : c.status === 'busy' || c.status === 'limit' ? 'mid' : 'fail', label, c.status === 'unavailable' ? '' : (c.reason || 'could not read the page'));
+      meta.textContent = c.status === 'unavailable' ? '' : fmtMs(c.ms);
+    }
+  }
+  function rVerdict(v) {
+    for (const p of rprov) {
+      const c = rrows[p.id], ch = v.checks[p.id];
+      if (!c || c.status !== 'ok') continue;
+      if (!ch) { rSet(p.id, 'wait', 'Read it · not judged'); continue; }
+      const pass = ch.real && (ch.answers == null || ch.answers);
+      if (pass) rSet(p.id, 'pass', '✓ Passed', 'real content, answers your search');
+      else if (!ch.real) rSet(p.id, 'fail', '✗ Wall or error', 'got a login wall, bot check or error page instead');
+      else rSet(p.id, 'mid', 'Read it, no answer', 'real content, but not what your search asked');
+      $('dr-' + p.id).classList.remove('pass');
+    }
+    const total = rprov.filter(p => rrows[p.id] && rrows[p.id].status !== 'unavailable').length;
+    const read = rprov.filter(p => v.checks[p.id] && v.checks[p.id].real).length;
+    const found = rprov.filter(p => v.checks[p.id] && v.checks[p.id].answers).length;
+    let line = `${v.passed} of ${total} read the page and found what your search asked.`;
+    if (read >= 2 && found * 2 < read) line += ' Most texts lack it, so the page itself may not cover your search.';
+    $('d-sum').textContent = line;
+  }
+
+  async function openReader(u, title) {
+    if (!(currentRunId > 0)) { showNotice('Wait until the comparison finishes, then click a result.'); return; }
+    if (rcurrent) rcurrent.abort();
+    const ctl = new AbortController(); rcurrent = ctl;
+    rrows = {}; rquery = input.value.trim();
+    if (!title) for (const c of Object.values(columns)) for (const r of (c.results || [])) if (!title && domain(r.url) === domain(u) && r.url.replace(/\/$/, '') === u.replace(/\/$/, '')) title = r.title;
+    $('d-title').textContent = title || u; $('d-dom').textContent = domain(u);
+    const href = safeHref(u); if (href) $('d-open').href = href;
+    $('d-q').replaceChildren('Checked against your search: ', el('b', null, `“${rquery}”`));
+    $('d-sum').replaceChildren(el('span', 'dot'), document.createTextNode('Every API is fetching the page…'));
+    $('d-rows').replaceChildren();
+    $('drawer').hidden = false; $('backdrop').hidden = false; document.body.style.overflow = 'hidden';
+    $('d-close').focus();
+    const path = `/api/compare/extract?run=${currentRunId}&url=${encodeURIComponent(u)}`;
+    { const url = new URL(location.href); url.searchParams.set('read', u); history.replaceState(null, '', url); }
+    try {
+      await ensureSession();
+      let res = await fetch(path, { signal: ctl.signal });
+      if (res.status === 403) { sessionAt = 0; await ensureSession(); res = await fetch(path, { signal: ctl.signal }); }
+      if (!res.ok || !(res.headers.get('content-type') || '').includes('text/event-stream')) {
+        let msg = 'Something went wrong. Try again.';
+        try { msg = (await res.json()).error || msg; } catch {}
+        throw new Error(msg);
+      }
+      await readEvents(res, (ev, d) => {
+        if (rcurrent !== ctl) return;
+        if (ev === 'start') {
+          rprov = d.providers;
+          $('d-rows').replaceChildren(...rprov.map(rRow));
+          if (d.cached) $('d-sum').replaceChildren(el('span', 'dot'), document.createTextNode(`Showing an earlier check of this page (${ago(d.at)}).`));
+        } else if (ev === 'column') {
+          rColumn(d);
+          if (rprov.every(p => rrows[p.id])) $('d-sum').replaceChildren(el('span', 'dot'), document.createTextNode('All in. The judge is checking each text…'));
+        } else if (ev === 'verdict') {
+          rVerdict(d);
+        } else if (ev === 'verdict_error') {
+          $('d-sum').textContent = d.error;
+        }
+      });
+    } catch (e) {
+      if (e.name !== 'AbortError' && rcurrent === ctl) $('d-sum').textContent = e.message;
+    } finally {
+      if (rcurrent === ctl) rcurrent = null;
+    }
+  }
+
+  // ---------- Extract ----------
+  const XPROVIDERS = [
+    { id: 'dowse', name: 'Dowse', mode: 'basic extract', price: 2 * 10 / 13000 },
+    { id: 'exa', name: 'Exa', mode: 'contents, live', price: 0.001 },
+    { id: 'tavily', name: 'Tavily', mode: 'basic extract', price: 0.008 / 5 },
+    { id: 'perplexity', name: 'Perplexity', mode: 'Context API, live', price: 0.001 },
+    { id: 'contextdev', name: 'Context.dev', mode: 'scrape, live', price: 0.002 },
+    { id: 'parallel', name: 'Parallel', mode: 'extract, full page', price: 0.001 },
+    { id: 'keenable', name: 'Keenable', mode: 'fetch, live', price: 0.004 },
+  ];
+  const XPRICE = Object.fromEntries(XPROVIDERS.map(p => [p.id, p.price]));
+  const XEXAMPLES = [
+    'https://stripe.com/pricing',
+    'https://news.ycombinator.com/',
+    'https://www.amazon.com/dp/B09B8V1LZ3',
+    'https://www.reddit.com/r/golang/',
+    'https://www.nytimes.com/',
+    'https://www.g2.com/products/notion/reviews',
+  ];
+  const xform = $('xask'), xurl = $('xurl'), xbtn = $('xgo');
+  let xproviders = [], xcols = {}, xquestion = '';
+  const per1kPages = usd => usd > 0 ? '$' + (usd * 1000).toFixed(2) + ' per 1k pages' : '';
+
+  const xex = $('xexamples');
+  for (const u of XEXAMPLES) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = shortURL(u);
+    b.onclick = () => { xurl.value = u; runExtract(u); };
+    xex.appendChild(b);
+  }
+
+  const XROWS = [
+    ['got', 'Got the page'],
+    ['real', 'Real content'],
+    ['answers', 'Answers the question'],
+    ['chars', 'Length'],
+    ['ms', 'Time'],
+    ['price', 'Price'],
+    ['preview', 'Text'],
+  ];
+
+  function setMode(m) {
+    const x = m === 'extract';
+    $('tab-search').setAttribute('aria-selected', String(!x));
+    $('tab-extract').setAttribute('aria-selected', String(x));
+    $('mode-search').hidden = x; $('out').hidden = x; $('how-search').hidden = x;
+    $('mode-extract').hidden = !x; $('xout').hidden = !x; $('how-extract').hidden = !x;
+    $('h1').textContent = x ? 'One page, seven extract APIs, side by side.' : 'One query, seven search APIs, side by side.';
+    $('lede').textContent = x
+      ? 'Paste a URL. Every API fetches the page live, and an AI judge checks whether each one got the real page, not a login wall, bot check or error page.'
+      : 'Each column fills in as that API answers. When all are in, an AI judge scores every result without seeing which API returned it.';
+  }
+  $('tab-search').onclick = () => { setMode('search'); currentRunId = 0; setRunURL(0); markActive(); };
+  $('tab-extract').onclick = () => { setMode('extract'); currentRunId = 0; setRunURL(0); markActive(); if (!xurl.value) xurl.focus(); };
+
+  function xlayout(list, question, idle) {
+    xproviders = list; xcols = {}; xquestion = question || '';
+    $('xboard').style.setProperty('--cols', list.length > 6 ? Math.ceil(list.length / 2) : list.length);
+    const head = $('xhead'); head.replaceChildren(el('th', 'lab'));
+    const board = $('xboard'); board.replaceChildren();
+    for (const p of list) {
+      const th = el('th'); th.id = 'xh-' + p.id;
+      th.append(p.name, el('span', 't'), el('div', 'mode', p.mode || ''));
+      head.appendChild(th);
+      const card = el('div', 'score'); card.id = 'xs-' + p.id;
+      const name = el('div', 'name'); name.append(el('span', null, p.name));
+      card.append(name, el('div', 'verdict', '–'), el('div', 'meta', idle ? (p.mode || '') : 'Fetching…'), el('div', 'price', per1kPages(XPRICE[p.id])), el('div', 'badges'));
+      board.appendChild(card);
+    }
+    const body = $('xbody'); body.replaceChildren();
+    for (const [key, label] of XROWS) {
+      if (key === 'answers' && !xquestion && !idle) continue;
+      const tr = el('tr'); tr.id = 'xr-' + key;
+      tr.appendChild(el('td', 'lab', key === 'answers' && xquestion ? `Answers: “${xquestion}”` : label));
+      for (const p of list) {
+        const td = el('td', 'cell'); td.id = `x-${p.id}-${key}`;
+        if (key === 'price') td.appendChild(el('span', 'dim', per1kPages(XPRICE[p.id])));
+        else td.appendChild(idle ? el('span', 'dim', '–') : (key === 'got' ? el('div', 'skel w2') : el('span', 'dim', '…')));
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+    if (idle) $('xjudge').textContent = 'Paste a URL or pick an example, and the table fills in.';
+  }
+  xlayout(XPROVIDERS, '', true);
+
+  function xset(id, key, ...nodes) { const td = $(`x-${id}-${key}`); if (td) td.replaceChildren(...nodes); }
+  function mark(ok, yes, no) { return el('span', ok ? 'yes' : 'no', ok ? yes : no); }
+
+  function xfillColumn(c) {
+    xcols[c.id] = c;
+    const th = $('xh-' + c.id); if (th) th.querySelector('.t').textContent = c.status === 'ok' ? fmtMs(c.ms) : '';
+    const card = $('xs-' + c.id);
+    const ok = c.status === 'ok';
+    if (card) {
+      card.querySelector('.meta').textContent = ok ? `${c.chars.toLocaleString()} chars · ${fmtMs(c.ms)}` : (c.status === 'unavailable' ? 'Not connected' : (c.reason || 'No answer'));
+      if (c.cost_usd > 0) card.querySelector('.price').textContent = per1kPages(c.cost_usd);
+      if (!ok) { const v = card.querySelector('.verdict'); v.textContent = c.status === 'unavailable' ? '–' : c.status === 'limit' ? 'No quota' : 'Failed'; v.className = 'verdict' + (c.status === 'unavailable' ? '' : c.status === 'limit' ? ' mid' : ' fail'); }
+    }
+    if (ok) {
+      xset(c.id, 'got', mark(true, '✓ Yes'));
+      xset(c.id, 'real', el('span', 'dim', 'Judging…'));
+      xset(c.id, 'answers', el('span', 'dim', 'Judging…'));
+      xset(c.id, 'chars', document.createTextNode(c.chars.toLocaleString() + ' chars'));
+      xset(c.id, 'ms', document.createTextNode(fmtMs(c.ms)));
+      if (c.cost_usd > 0) xset(c.id, 'price', document.createTextNode(per1kPages(c.cost_usd)));
+      const det = el('details'); det.append(el('summary', null, 'Show the start'), el('pre', null, c.preview));
+      xset(c.id, 'preview', det);
+    } else {
+      const no = c.status === 'unavailable' ? el('span', 'dim', 'Not connected') : mark(false, '', '✗ No');
+      if (c.status !== 'unavailable' && c.reason) no.appendChild(el('span', 'why', c.reason));
+      xset(c.id, 'got', no);
+      for (const k of ['real', 'answers', 'chars', 'ms', 'preview']) xset(c.id, k, el('span', 'dim', '–'));
+      if (c.status !== 'unavailable') xset(c.id, 'ms', document.createTextNode(fmtMs(c.ms)));
+    }
+  }
+
+  function xapplyVerdict(v) {
+    for (const p of xproviders) {
+      const c = xcols[p.id], ch = v.checks[p.id], card = $('xs-' + p.id);
+      if (!c || c.status !== 'ok') continue;
+      if (!ch) { xset(p.id, 'real', el('span', 'dim', 'Not judged')); xset(p.id, 'answers', el('span', 'dim', 'Not judged')); continue; }
+      const r = mark(ch.real, '✓ Yes', '✗ No'); if (!ch.real) r.appendChild(el('span', 'why', 'Wall, check or error page'));
+      xset(p.id, 'real', r);
+      if (ch.answers != null) xset(p.id, 'answers', mark(ch.answers, '✓ Yes', '✗ No'));
+      const pass = ch.real && (ch.answers == null || ch.answers);
+      if (card) {
+        const vd = card.querySelector('.verdict');
+        const [txt, cls] = pass ? ['Passed', 'pass'] : !ch.real ? ['Wall or error', 'fail'] : ['No answer', 'mid'];
+        vd.textContent = txt; vd.className = 'verdict ' + cls;
+        card.classList.remove('win');
+        card.querySelector('.badges').replaceChildren();
+      }
+    }
+    const total = xproviders.filter(p => xcols[p.id] && xcols[p.id].status !== 'unavailable').length;
+    const read = xproviders.filter(p => v.checks[p.id] && v.checks[p.id].real).length;
+    const found = xproviders.filter(p => v.checks[p.id] && v.checks[p.id].answers).length;
+    let line = `${v.passed} of ${total} passed` + (xquestion ? ': got the page, real content, and the answer.' : ': got the page and real content.');
+    if (xquestion && read >= 2 && found * 2 < read) line += ' Most texts lack the answer, so the page itself may not state it.';
+    $('xjudge').textContent = line;
+  }
+
+  function renderExtractRun(run, providers) {
+    xurl.value = run.url;
+    xlayout(providers, run.question, false);
+    for (const c of run.columns) xfillColumn(c);
+    if (run.verdict) xapplyVerdict(run.verdict); else $('xjudge').textContent = 'The judge did not check this run.';
+    $('xjudge').prepend(`Run ${ago(run.at)}. `);
+    if (window.matchMedia('(max-width: 1300px)').matches) $('xout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Reads a server-sent event stream from fetch and calls on(event, data) for each event.
+  async function readEvents(res, on) {
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+        let ev = 'message', data = '';
+        for (const line of chunk.split('\n')) {
+          if (line.startsWith('event: ')) ev = line.slice(7);
+          else if (line.startsWith('data: ')) data += line.slice(6);
+        }
+        on(ev, data ? JSON.parse(data) : {});
+      }
+    }
+  }
+
+  async function runExtract(u) {
+    u = (u || '').trim(); const q = '';
+    if (!u) return;
+    if (xcurrent) xcurrent.abort();
+    if (current) { current.abort(); current = null; btn.disabled = false; }
+    const ctl = new AbortController(); xcurrent = ctl;
+    showNotice(''); xbtn.disabled = true; currentRunId = 0; markActive();
+    const path = '/api/compare/extract?url=' + encodeURIComponent(u) + '&q=' + encodeURIComponent(q);
+    try {
+      await ensureSession();
+      let res = await fetch(path, { signal: ctl.signal });
+      if (res.status === 403) { sessionAt = 0; await ensureSession(); res = await fetch(path, { signal: ctl.signal }); }
+      if (!res.ok || !(res.headers.get('content-type') || '').includes('text/event-stream')) {
+        let msg = 'Something went wrong. Try again.';
+        try { msg = (await res.json()).error || msg; } catch {}
+        throw new Error(msg);
+      }
+      let cachedAt = null;
+      await readEvents(res, (ev, d) => {
+        if (ev === 'start') {
+          cachedAt = d.cached ? d.at : null;
+          xurl.value = d.url;
+          xlayout(d.providers, d.question, false);
+          $('xjudge').replaceChildren(el('span', 'dot'), document.createTextNode(d.cached ? 'Showing an earlier run of this page.' : 'Every API is fetching the page live…'));
+        } else if (ev === 'column') {
+          xfillColumn(d);
+          if (xproviders.every(p => xcols[p.id])) $('xjudge').replaceChildren(el('span', 'dot'), document.createTextNode('All in. The judge is checking each text…'));
+        } else if (ev === 'verdict') {
+          xapplyVerdict(d);
+          if (cachedAt) $('xjudge').prepend(`Run ${ago(cachedAt)}. `);
+        } else if (ev === 'verdict_error') {
+          $('xjudge').textContent = d.error;
+        } else if (ev === 'done') {
+          if (d.id) { currentRunId = d.id; setRunURL(d.id); }
+          loadHistory();
+        }
+      });
+    } catch (e) {
+      if (e.name !== 'AbortError') showNotice(e.message);
+    } finally {
+      if (xcurrent === ctl) { xcurrent = null; xbtn.disabled = false; }
+    }
+  }
+  xform.addEventListener('submit', e => { e.preventDefault(); runExtract(xurl.value); });
+
+  form.addEventListener('submit', e => { e.preventDefault(); run(input.value); });
+  const params = new URLSearchParams(location.search);
+  const initialRun = +params.get('run'), initial = params.get('q');
+  // The Extract tab shows only when the server allows it (off in production for now).
+  fetch('/api/compare/config' + (params.get('view') === 'public' ? '?view=public' : '')).then(r => r.json()).then(c => {
+    if (!c.extract) return;
+    extractShown = true;
+    $('tabs').hidden = false;
+    $('side-sub').textContent = 'Every search and page anyone compares, with its results. Click one to see it.';
+    loadHistory();
+    if (params.get('tab') === 'extract' && !initialRun) setMode('extract');
+  }).catch(() => {});
+  if (initialRun > 0) {
+    const read = params.get('read');
+    Promise.resolve(openRun(initialRun)).then(() => { if (read) openReader(read, ''); });
+  }
+  else if (initial) { input.value = initial; run(initial); }
+  else input.focus();
+})();
+</script>
+</body>
+</html>
