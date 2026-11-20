@@ -94,6 +94,33 @@
   }
   .side .hm { margin-top: 2px; font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
   .side .hm b { color: var(--jade); font-weight: 600; }
+  .lb {
+    margin-top: 40px; background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px 20px 8px; box-shadow: 0 10px 30px -22px color-mix(in srgb, var(--jade) 70%, transparent);
+  }
+  .lb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .lb h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 0; letter-spacing: -0.01em; }
+  .lb-sub { color: var(--faint); font-size: 13px; }
+  .lb-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lb-table { width: 100%; min-width: 760px; border-collapse: collapse; table-layout: auto; }
+  .lb-table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--faint); padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .lb-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; white-space: nowrap; }
+  .lb-table tbody tr:last-child td { border-bottom: 0; }
+  .lb-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .lb-table .n { width: 34px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .lb-table tr.top .n { color: var(--jade); font-weight: 700; }
+  .lb-name { font-weight: 600; }
+  .lb-table tr.unranked td { color: var(--muted); }
+  .lb-table tr.unranked .lb-avg b { color: var(--muted); }
+  .lb-table tr.unranked .lb-bar i { background: var(--faint); }
+  .lb-name small { display: block; font-weight: 400; font-size: 12px; color: var(--faint); }
+  .lb-avg { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+  .lb-avg b { font-family: var(--serif); font-weight: 400; font-size: 22px; min-width: 44px; text-align: right; }
+  .lb-bar { width: 120px; height: 6px; background: var(--panel); border-radius: 6px; overflow: hidden; }
+  .lb-bar i { display: block; height: 100%; background: var(--jade); border-radius: 6px; transition: width .6s cubic-bezier(.2, .8, .2, 1); }
+  .lb-table tr.top .lb-bar i { background: linear-gradient(90deg, var(--jade), color-mix(in srgb, var(--jade) 60%, var(--good))); }
+  .lb + .tabs { margin-top: 28px; }
+  @media (max-width: 560px) { .lb { padding: 14px 14px 6px; } .lb h2 { font-size: 22px; } .lb-bar { width: 70px; } }
   .tabs { display: inline-flex; gap: 4px; padding: 4px; margin-top: 40px; background: var(--panel); border-radius: 12px; }
   .tabs button {
     font: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
@@ -432,6 +459,19 @@
   </aside>
 
   <main>
+  <section class="lb" id="lb" hidden aria-labelledby="lb-h">
+    <div class="lb-head">
+      <h2 id="lb-h">Search leaderboard</h2>
+      <span class="lb-sub" id="lb-sub"></span>
+    </div>
+    <div class="lb-wrap">
+      <table class="lb-table">
+        <thead><tr><th class="n">#</th><th>API</th><th class="num">Average</th><th class="num">Median</th><th class="num">Wins</th><th class="num">Queries</th><th class="num">Median time</th><th class="num">Price per 1k</th></tr></thead>
+        <tbody id="lb-body"></tbody>
+      </table>
+    </div>
+  </section>
+
   <nav class="tabs" id="tabs" role="tablist" aria-label="What to compare" hidden>
     <button type="button" role="tab" id="tab-search" aria-selected="true">Search</button>
     <button type="button" role="tab" id="tab-extract" aria-selected="false">Extract</button>
@@ -897,6 +937,7 @@
           } else if (ev === 'done') {
             if (d.id) { currentRunId = d.id; setRunURL(d.id); }
             loadHistory();
+            loadLeaderboard();
           } else if (ev === 'verdict_error') {
             $('judge').textContent = d.error;
           }
@@ -908,6 +949,32 @@
       if (current === ctl) { current = null; btn.disabled = false; }
     }
   }
+
+  // ---------- Leaderboard ----------
+  async function loadLeaderboard() {
+    try {
+      const lb = await (await fetch('/api/compare/leaderboard')).json();
+      if (!lb.rows || !lb.rows.length) { $('lb').hidden = true; return; }
+      $('lb-sub').textContent = `Search scores across ${lb.queries} ${lb.queries === 1 ? 'query' : 'queries'} people ran here, each query counted once. Updated after every comparison.`;
+      const body = $('lb-body'); body.replaceChildren();
+      let rank = 0;
+      lb.rows.forEach((r, i) => {
+        const tr = el('tr');
+        if (r.ranked) { rank++; if (rank === 1) tr.className = 'top'; } else tr.className = 'unranked';
+        const name = el('td', 'lb-name', r.name); name.appendChild(el('small', null, r.ranked ? (r.mode || '') : `${r.mode || ''} · too few queries yet to rank`));
+        const avg = el('td', 'num'); const box = el('div', 'lb-avg');
+        const bar = el('div', 'lb-bar'); const fill = el('i'); fill.style.width = Math.max(0, Math.min(100, r.average)) + '%'; bar.appendChild(fill);
+        box.append(bar, el('b', null, r.average.toFixed(1))); avg.appendChild(box);
+        tr.append(el('td', 'n', r.ranked ? String(rank) : '–'), name, avg,
+          el('td', 'num', r.median.toFixed(1)), el('td', 'num', String(r.wins)), el('td', 'num', String(r.queries)),
+          el('td', 'num', r.median_ms ? fmtMs(r.median_ms) : '–'),
+          el('td', 'num', r.price_usd ? '$' + (r.price_usd * 1000).toFixed(2) : '–'));
+        body.appendChild(tr);
+      });
+      $('lb').hidden = false;
+    } catch { /* the table is extra: the page works without it */ }
+  }
+  loadLeaderboard();
 
   // ---------- Reading a clicked result with every extract API ----------
   let rcurrent = null, rrows = {}, rprov = [], rquery = '';

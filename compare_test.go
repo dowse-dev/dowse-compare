@@ -698,3 +698,72 @@ func TestJudgeExcerptWithoutQuestionSeesTheMiddle(t *testing.T) {
 		t.Fatalf("a whole page should be judged by its content too (len %d)", utf8.RuneCountInString(ex))
 	}
 }
+
+func TestLeaderboard(t *testing.T) {
+	f := func(v float64) *float64 { return &v }
+	mk := func(q, winner string, scores map[string]float64, ms map[string]int64) compareRun {
+		v := &compareVerdict{Scores: map[string]compareScore{}, Winner: winner}
+		var cols []compareColumn
+		for id, sc := range scores {
+			v.Scores[id] = compareScore{Score: f(sc)}
+			cols = append(cols, compareColumn{ID: id, Status: "ok", Ms: ms[id], CostUSD: 0.002})
+		}
+		return compareRun{Query: q, Verdict: v, Columns: cols}
+	}
+	runs := []compareRun{
+		mk("q1", "a", map[string]float64{"a": 90, "b": 70}, map[string]int64{"a": 100, "b": 300}),
+		mk("q2", "", map[string]float64{"a": 80, "b": 79}, map[string]int64{"a": 200, "b": 100}),
+		mk("q3", "b", map[string]float64{"a": 40, "b": 95, "c": 60}, map[string]int64{"a": 300, "b": 200, "c": 50}),
+	}
+	ps := []compareProvider{{ID: "a", Name: "A"}, {ID: "b", Name: "B"}, {ID: "c", Name: "C"}, {ID: "d", Name: "D"}}
+	lb := leaderboard(runs, ps)
+	if lb.Queries != 3 || len(lb.Rows) != 3 {
+		t.Fatalf("queries %d rows %d (d never ran, so no row)", lb.Queries, len(lb.Rows))
+	}
+	// With 3 queries no provider has the 5 a rank needs; order is still by average.
+	for _, r := range lb.Rows {
+		if r.Ranked {
+			t.Fatalf("%s ranked on %d queries", r.ID, r.Queries)
+		}
+	}
+	b, a, c := lb.Rows[0], lb.Rows[1], lb.Rows[2]
+	if b.ID != "b" || b.Average != 81.3 || b.Median != 79 || b.Wins != 1 || b.MedianMs != 200 {
+		t.Fatalf("b: %+v", b)
+	}
+	if a.ID != "a" || a.Average != 70 || a.Median != 80 || a.Wins != 1 || a.Queries != 3 {
+		t.Fatalf("a: %+v", a)
+	}
+	if c.ID != "c" || c.Queries != 1 || c.Average != 60 || c.PriceUSD != 0.002 {
+		t.Fatalf("c is averaged only over the queries it was in: %+v", c)
+	}
+}
+
+func TestLeaderboardCountsEachQueryOnce(t *testing.T) {
+	s := newTestCompare(t, &fakeScorer{}, staticProvider("a", nil, "https://good.example/1"))
+	doCompare(s, "same")
+	s.now = func() time.Time { return time.Now().Add(48 * time.Hour) } // past the cache, so a second run
+	doCompare(s, "same")
+	w := httptest.NewRecorder()
+	s.leaderboardHandler(w, httptest.NewRequest(http.MethodGet, "/api/compare/leaderboard", nil))
+	var lb compareLeaderboard
+	_ = json.Unmarshal(w.Body.Bytes(), &lb)
+	if lb.Queries != 1 || len(lb.Rows) != 1 || lb.Rows[0].Queries != 1 {
+		t.Fatalf("a repeated query should count once: %+v", lb)
+	}
+}
+
+func TestLeaderboardRanksOnlyWithEnoughQueries(t *testing.T) {
+	f := func(v float64) *float64 { return &v }
+	var runs []compareRun
+	for i := 0; i < 10; i++ {
+		sc := map[string]compareScore{"old": {Score: f(80)}}
+		if i >= 8 { // "new" joined for the last 2 queries only, with high scores
+			sc["new"] = compareScore{Score: f(99)}
+		}
+		runs = append(runs, compareRun{Query: fmt.Sprint(i), Verdict: &compareVerdict{Scores: sc}})
+	}
+	lb := leaderboard(runs, []compareProvider{{ID: "old"}, {ID: "new"}})
+	if lb.Rows[0].ID != "old" || !lb.Rows[0].Ranked || lb.Rows[1].ID != "new" || lb.Rows[1].Ranked {
+		t.Fatalf("a provider with 2 of 10 queries must not top the table: %+v", lb.Rows)
+	}
+}

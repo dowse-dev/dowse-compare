@@ -57,6 +57,7 @@ func main() {
 	mux.HandleFunc("/", serveComparePage)
 	mux.HandleFunc("/api/compare", svc.handler)
 	mux.HandleFunc("/api/compare/history", svc.historyHandler)
+	mux.HandleFunc("/api/compare/leaderboard", svc.leaderboardHandler)
 	mux.HandleFunc("/api/compare/run", svc.runHandler)
 	mux.HandleFunc("/api/compare/extract", svc.extractHandler)
 	mux.HandleFunc("/api/compare/config", svc.configHandler)
